@@ -28,6 +28,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"text/template"
 
 	"golang.org/x/tools/go/callgraph"
@@ -38,6 +39,9 @@ import (
 	"golang.org/x/tools/go/pointer"
 	"golang.org/x/tools/go/ssa"
 )
+
+var tagsFlag = flag.String("tags", "",
+	"'tag list'\ta list of build tags")
 
 var algoFlag = flag.String("algo", "rta",
 	`Call graph construction algorithm, one of "rta" or "pta"`)
@@ -144,7 +148,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if err := doCallgraph(&build.Default, *algoFlag, *formatFlag, *testFlag, flag.Args()); err != nil {
+	if err := doCallgraph(&build.Default, *tagsFlag, *algoFlag, *formatFlag, *testFlag, flag.Args()); err != nil {
 		fmt.Fprintf(os.Stderr, "callgraph: %s\n", err)
 		os.Exit(1)
 	}
@@ -152,7 +156,8 @@ func main() {
 
 var stdout io.Writer = os.Stdout
 
-func doCallgraph(ctxt *build.Context, algo, format string, tests bool, args []string) error {
+func doCallgraph(ctxt *build.Context, tags, algo, format string, tests bool, args []string) error {
+	ctxt.BuildTags = strings.Split(tags, " ")
 	conf := loader.Config{
 		Build:         ctxt,
 		SourceImports: true,

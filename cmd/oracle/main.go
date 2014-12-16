@@ -22,6 +22,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 
 	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/oracle"
@@ -38,6 +39,9 @@ var formatFlag = flag.String("format", "plain", "Output format.  One of {plain,j
 
 // TODO(adonovan): flip this flag after PTA presolver is implemented.
 var reflectFlag = flag.Bool("reflect", false, "Analyze reflection soundly (slow).")
+
+var tagsFlag = flag.String("tags", "",
+	"'tag list'\ta list of build tags")
 
 const useHelp = "Run 'oracle -help' for more information.\n"
 
@@ -161,6 +165,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "oracle: illegal -format value: %q.\n"+useHelp, *formatFlag)
 		os.Exit(2)
 	}
+
+	build.Default.BuildTags = strings.Split(*tagsFlag, " ")
 
 	// Ask the oracle.
 	res, err := oracle.Query(args, mode, *posFlag, ptalog, &build.Default, *reflectFlag)
